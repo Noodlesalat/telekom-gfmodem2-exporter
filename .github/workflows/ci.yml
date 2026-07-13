@@ -33,7 +33,7 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v22
 
       - name: Nix Cache
-        uses: DeterminateSystems/magic-nix-cache-action@v8
+        uses: DeterminateSystems/magic-nix-cache-action@v14
 
       - name: Run Nix Flake Check
         run: nix flake check -L
