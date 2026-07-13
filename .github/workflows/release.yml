@@ -9,24 +9,62 @@ permissions:
   contents: write
 
 jobs:
-  goreleaser:
+  release:
+    name: Build and Release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.23'
 
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v7
+      - name: Build Binaries
+        run: |
+          mkdir -p dist
+          export CGO_ENABLED=0
+          
+          # Linux x86 & ARM
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/telekom-gfmodem2-exporter_linux_amd64 ./cmd/telekom-gfmodem2-exporter
+          GOOS=linux GOARCH=386 go build -ldflags="-s -w" -o dist/telekom-gfmodem2-exporter_linux_386 ./cmd/telekom-gfmodem2-exporter
+          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/telekom-gfmodem2-exporter_linux_arm64 ./cmd/telekom-gfmodem2-exporter
+          GOOS=linux GOARCH=arm GOARM=6 go build -ldflags="-s -w" -o dist/telekom-gfmodem2-exporter_linux_armv6 ./cmd/telekom-gfmodem2-exporter
+          GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="-s -w" -o dist/telekom-gfmodem2-exporter_linux_armv7 ./cmd/telekom-gfmodem2-exporter
+          
+          # OpenWRT MIPS
+          GOOS=linux GOARCH=mips GOMIPS=softfloat go build -ldflags="-s -w" -o dist/telekom-gfmodem2-exporter_linux_mips_softfloat ./cmd/telekom-gfmodem2-exporter
+          GOOS=linux GOARCH=mips GOMIPS=hardfloat go build -ldflags="-s -w" -o dist/telekom-gfmodem2-exporter_linux_mips_hardfloat ./cmd/telekom-gfmodem2-exporter
+          
+          GOOS=linux GOARCH=mipsle GOMIPS=softfloat go build -ldflags="-s -w" -o dist/telekom-gfmodem2-exporter_linux_mipsle_softfloat ./cmd/telekom-gfmodem2-exporter
+          GOOS=linux GOARCH=mipsle GOMIPS=hardfloat go build -ldflags="-s -w" -o dist/telekom-gfmodem2-exporter_linux_mipsle_hardfloat ./cmd/telekom-gfmodem2-exporter
+          
+          GOOS=linux GOARCH=mips64 GOMIPS=softfloat go build -ldflags="-s -w" -o dist/telekom-gfmodem2-exporter_linux_mips64_softfloat ./cmd/telekom-gfmodem2-exporter
+          GOOS=linux GOARCH=mips64 GOMIPS=hardfloat go build -ldflags="-s -w" -o dist/telekom-gfmodem2-exporter_linux_mips64_hardfloat ./cmd/telekom-gfmodem2-exporter
+          
+          GOOS=linux GOARCH=mips64le GOMIPS=softfloat go build -ldflags="-s -w" -o dist/telekom-gfmodem2-exporter_linux_mips64le_softfloat ./cmd/telekom-gfmodem2-exporter
+          GOOS=linux GOARCH=mips64le GOMIPS=hardfloat go build -ldflags="-s -w" -o dist/telekom-gfmodem2-exporter_linux_mips64le_hardfloat ./cmd/telekom-gfmodem2-exporter
+
+      - name: Package Archives
+        run: |
+          cd dist
+          for file in telekom-gfmodem2-exporter_*; do
+            mkdir "$file-dir"
+            cp "$file" "$file-dir/telekom-gfmodem2-exporter"
+            tar -czf "$file.tar.gz" -C "$file-dir" telekom-gfmodem2-exporter
+            rm -rf "$file" "$file-dir"
+          done
+          sha256sum *.tar.gz > checksums.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          distribution: goreleaser
-          version: latest
-          args: release --clean
+          files: |
+            dist/*.tar.gz
+            dist/checksums.txt
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
