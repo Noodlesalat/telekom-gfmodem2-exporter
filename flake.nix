@@ -30,8 +30,12 @@
           vendorHash = null;
         };
 
-        apps.default = utils.lib.mkApp {
-          drv = packages.default;
+        apps.default = {
+          type = "app";
+          program = "${packages.default}/bin/telekom-gfmodem2-exporter";
+          meta = {
+            description = "Prometheus exporter for Telekom Glasfaser-Modem 2";
+          };
         };
 
         devShells.default = pkgs.mkShell {
@@ -61,8 +65,8 @@
                       import json
 
                       PORT = 8080
-                      STATUS_DATA = json.loads(r'''${builtins.toJSON (builtins.fromJSON statusJson)}''')
-                      FW_DATA = json.loads(r'''${builtins.toJSON (builtins.fromJSON fwJson)}''')
+                      STATUS_DATA = json.loads(r"""${builtins.toJSON (builtins.fromJSON statusJson)}""")
+                      FW_DATA = json.loads(r"""${builtins.toJSON (builtins.fromJSON fwJson)}""")
 
                       class MockHandler(http.server.BaseHTTPRequestHandler):
                           protocol_version = 'HTTP/1.0'
@@ -116,7 +120,7 @@
                 if m not in metrics:
                     raise Exception(f"Expected metric '{m}' was not found. Metrics returned:\n{metrics}")
 
-            expected_labels = 'glasfaser_modem_info{datetime="12.07.2026 20:35:24",device_name="Glasfaser-Modem 2",fw_version_standby="090144.1.0.006",firmware_date="2025-05-23 05:02:21",firmware_version="090144.1.0.009",hardware_revision="V1",ploam_state="",serial_number="2343DAAR123DAS08",ui_version="2.18.161"} 1'
+            expected_labels = 'glasfaser_modem_info{datetime="12.07.2026 20:35:24",device_name="Glasfaser-Modem 2",firmware_date="2025-05-23 05:02:21",firmware_version="090144.1.0.009",fw_version_standby="090144.1.0.006",hardware_revision="V1",ploam_state="",serial_number="2343DAAR123DAS08",ui_version="2.18.161"} 1'
             if expected_labels not in metrics:
                 raise Exception(f"Expected info labels not found. Metrics returned:\n{metrics}")
 
@@ -135,7 +139,7 @@
 
             package = lib.mkOption {
               type = lib.types.package;
-              default = self.packages.${pkgs.system}.default;
+              default = self.packages.${pkgs.stdenv.hostPlatform.system}.default;
               description = "The package to use for the exporter.";
             };
 
