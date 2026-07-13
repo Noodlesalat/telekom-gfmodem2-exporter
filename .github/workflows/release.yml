@@ -48,22 +48,16 @@ jobs:
           GOOS=linux GOARCH=mips64le GOMIPS=softfloat go build -ldflags="-s -w" -o dist/telekom-gfmodem2-exporter_linux_mips64le_softfloat ./cmd/telekom-gfmodem2-exporter
           GOOS=linux GOARCH=mips64le GOMIPS=hardfloat go build -ldflags="-s -w" -o dist/telekom-gfmodem2-exporter_linux_mips64le_hardfloat ./cmd/telekom-gfmodem2-exporter
 
-      - name: Package Archives
+      - name: Generate Checksums
         run: |
           cd dist
-          for file in telekom-gfmodem2-exporter_*; do
-            mkdir "$file-dir"
-            cp "$file" "$file-dir/telekom-gfmodem2-exporter"
-            tar -czf "$file.tar.gz" -C "$file-dir" telekom-gfmodem2-exporter
-            rm -rf "$file" "$file-dir"
-          done
-          sha256sum *.tar.gz > checksums.txt
+          sha256sum telekom-gfmodem2-exporter_* > checksums.txt
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/*.tar.gz
+            dist/telekom-gfmodem2-exporter_*
             dist/checksums.txt
           generate_release_notes: true
         env:
