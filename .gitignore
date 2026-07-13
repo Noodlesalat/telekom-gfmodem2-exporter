@@ -1,0 +1,9 @@
+# Compiled binaries
+/telekom-gfmodem2-exporter
+/cmd/telekom-gfmodem2-exporter/telekom-gfmodem2-exporter
+bin/
+
+# Nix build outputs & shells
+result
+result-*
+.direnv/
