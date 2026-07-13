@@ -54,7 +54,7 @@ jobs:
           sha256sum telekom-gfmodem2-exporter_* > checksums.txt
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             dist/telekom-gfmodem2-exporter_*
